@@ -51,7 +51,7 @@ void invertString(char *input, char *output, int n, int start){
     }
 }   
 
-int intToString(unsigned int value, int base, int start, char *string){
+int intToString(int value, int base, int start, char *string){
     int size = 0;
     char temp[40];
     int digit_value;
@@ -73,7 +73,7 @@ int intToString(unsigned int value, int base, int start, char *string){
 }
 
 int stringToInt(char *string, int size, int base, int start){
-    unsigned int digit_value, total_value=0;
+    int digit_value, total_value=0;
     for (int i = 2; (size - i) >= start; i++){
         if(string[size-i] <= 57){
             digit_value = string[size-i]-48;
@@ -103,21 +103,29 @@ void switchEndian(char *input, char *output, int input_size){
 
 int main(){
     char input[20];
-    int n = read(0, input, 20);
     char binary[40], hex[20], decimal[20], endian_2[32], endian_10[20];
-    int bin_size, decimal_size, hex_size, endian_size;
-    unsigned int total_value;
+    int bin_size = 0, decimal_size = 0, hex_size = 0, endian_size = 0;
+    int value;
+    unsigned int u_value;
+    int n = read(0, input, 20);
     if(input[0] == '0' && input[1] == 'x'){
         copyString(input, hex, n);
         hex_size = n;
-        total_value = stringToInt(hex, n, 16, 2);
-        decimal_size = intToString(total_value, 10, 0, decimal);
+        value = stringToInt(hex, n, 16, 2);
+        decimal_size = intToString(value, 10, 0, decimal);
         binary[0] = '0';
         binary[1] = 'b';
-        bin_size = intToString(total_value, 2, 2, binary);
+        bin_size = intToString(value, 2, 2, binary);
         switchEndian(binary, endian_2, bin_size);
-        total_value = stringToInt(endian_2, 33, 2, 0);
-        endian_size = intToString(total_value, 10, 0, endian_10);
+        u_value = stringToInt(endian_2, 33, 2, 0);
+        endian_size = intToString(u_value, 10, 0, endian_10);
+    }
+    else{
+        if(input[0] = '-'){
+            copyString(input, decimal, n);
+            decimal_size = n;
+            value = stringToInt(decimal, n, 16, 1);
+        }
     }
     write(1, binary, bin_size);
     write(1, decimal, decimal_size);
