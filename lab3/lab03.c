@@ -30,7 +30,17 @@ void write(int __fd, const void *__buf, int __n){
         : "a0", "a1", "a2", "a7"
     );
 }
- 
+
+void exit(int error_code){
+    __asm__ __volatile__(
+        "li a7, 93           # syscall write (93) \n"
+        "ecall"
+        :   
+        :"r"(error_code)
+        :"a7"
+    );
+}
+
 int power(int base, int position){
     int result = 1;
     for (int i = 0; i < position; i++){
@@ -51,7 +61,7 @@ void invertString(char *input, char *output, int n, int start){
     }
 }   
 
-int intToString(int value, int base, int start, char *string){
+int intToString(unsigned int value, int base, int start, char *string){
     int size = 0;
     char temp[40];
     int digit_value;
@@ -101,41 +111,70 @@ void switchEndian(char *input, char *output, int input_size){
     }
 }
 
+void complemento(char *input, char *output){
+    int i = 2;
+    while(input[i] != 10){
+        output[i-2] = input[i] == 48 ? 49 : 48;
+        i++;
+    }
+}
+
 int main(){
     char input[20];
-    char binary[40], hex[20], decimal[20], endian_2[32], endian_10[20];
+    char binary[40], binary_complement[32], hex[20], decimal[20], endian_2[32], endian_10[20];
     int bin_size = 0, decimal_size = 0, hex_size = 0, endian_size = 0;
     int value;
-    unsigned int u_value;
+    unsigned int u_bit32 = power(2, 32);
     int n = read(0, input, 20);
     if(input[0] == '0' && input[1] == 'x'){
         copyString(input, hex, n);
         hex_size = n;
         value = stringToInt(hex, n, 16, 2);
-        decimal_size = intToString(value, 10, 0, decimal);
         binary[0] = '0';
         binary[1] = 'b';
         bin_size = intToString(value, 2, 2, binary);
+        if (value<0){
+            complemento(binary, binary_complement);
+            value = stringToInt(binary_complement, bin_size-2, 2, 0);
+            decimal[0] = '-';
+            decimal_size = intToString(value + 1, 10, 1, decimal);
+        }
+        else{
+            decimal_size = intToString(value, 10, 0, decimal);
+        }
         switchEndian(binary, endian_2, bin_size);
-        u_value = stringToInt(endian_2, 33, 2, 0);
-        endian_size = intToString(u_value, 10, 0, endian_10);
+        value = stringToInt(endian_2, 33, 2, 0);
+        endian_size = intToString(value, 10, 0, endian_10);
     }
     else{
-        if(input[0] = '-'){
-            copyString(input, decimal, n);
-            decimal_size = n;
-            value = stringToInt(decimal, n, 16, 1);
+        copyString(input, decimal, n);
+        decimal_size = n;
+        if(input[0] == '-'){
+            value = stringToInt(decimal, n, 10, 1);
+            value = value * (-1);
         }
+        else{
+            value = stringToInt(decimal, n, 10, 0);
+        }
+        binary[0] = '0';
+        binary[1] = 'b';
+        bin_size = intToString(value, 2, 2, binary);
+        hex[0] = '0';
+        hex[1] = 'x';
+        hex_size = intToString(value, 16, 2, hex);
+        switchEndian(binary, endian_2, bin_size);
+        value = stringToInt(endian_2, 33, 2, 0);
+        endian_size = intToString(value, 10, 0, endian_10);
     }
     write(1, binary, bin_size);
     write(1, decimal, decimal_size);
     write(1, hex, hex_size);
     write(1, endian_10, endian_size);
     
-    
     return 0;
 }
  
 void _start(){
     main();
+    exit(0);
 }
