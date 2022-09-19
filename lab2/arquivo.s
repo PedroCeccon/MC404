@@ -16,7 +16,6 @@ loop:
 end:
     la a0, result
     sw a1, 0(a0)
-confere:
     li a0, 0
     li a7, 93
     ecall
