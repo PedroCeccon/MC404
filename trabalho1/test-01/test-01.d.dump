@@ -1,0 +1,13 @@
+
+test-01.x:	file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+000110b4 <test>:
+   110b4: 33 05 a5 00  	add	a0, a0, a0
+   110b8: 33 85 c5 40  	sub	a0, a1, a2
+   110bc: 67 80 00 00  	jalr	zero, 0(ra)
+
+000110c0 <_start>:
+   110c0: ef f0 5f ff  	jal	ra, 0x110b4 <test>
