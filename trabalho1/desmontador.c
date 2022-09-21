@@ -38,8 +38,13 @@ int valorMem(unsigned char *file, int offset, int size){
     return valor;
 }
 
-char *getSectionName(Section shstrtab, Section _section){
-    
+char *getSectionName(char *file, Section shstrtab, Section _section){
+    int i;
+    for(i = 0; file[shstrtab.offset+_section.shstrtab_offset+i] != 0; i++);
+    char name[_SIZE(i)];
+    for(i = 0; file[shstrtab.offset+_section.shstrtab_offset+i] != 0; i++)
+        name[i] = file[shstrtab.offset+_section.shstrtab_offset+i];
+    return name;
 }
 
 int main(/*int argc, char *argv[]*/){
