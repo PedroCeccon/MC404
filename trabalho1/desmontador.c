@@ -5,21 +5,21 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define _PATH "../lab2/executavel.x"
-#define _FLAG "-d"
+#define _PATH "test-01/test-01.x"
+#define _FLAG "-h"
 
 #define _SIZE(size) size
 #define _SIZE_2BYTE 2
 #define _SIZE_4BYTE 4
 #define _SIZE_8BYTE 8
-#define _HEADER_SIZE 52
-#define _E_SHOFF 32
-#define _E_SHNUM 48
-#define _E_SHSTRNDX 50
-#define _SECTION_HEADER_SIZE 40
-#define _SH_OFFSET 16
-#define _SH_ADDR 12
-#define _SH_SIZE 20
+#define _HEADER_SIZE 0x34
+#define _E_SHOFF 0x20
+#define _E_SHNUM 0x30
+#define _E_SHSTRNDX 0x32
+#define _SECTION_HEADER_SIZE 0x28
+#define _SH_OFFSET 0x10
+#define _SH_ADDR 0xc
+#define _SH_SIZE 0x14
 
 typedef struct {
     int shstrtab_offset;
@@ -137,7 +137,6 @@ int main(/*int argc, char *argv[]*/){
     e_shoff = valorMem(file_header, _E_SHOFF, _SIZE_4BYTE);
     e_shnum = valorMem(file_header, _E_SHNUM, _SIZE_2BYTE);
     e_shstrdnx = valorMem(file_header, _E_SHSTRNDX, _SIZE_2BYTE);
-
     sizeFile = e_shoff + e_shnum*_SECTION_HEADER_SIZE;
 
     fd = open(/*argv[argc-1]*/ _PATH, O_RDONLY);
@@ -147,9 +146,8 @@ int main(/*int argc, char *argv[]*/){
     Section sections[_SIZE(e_shnum)];
 
     fillSections(file, sections, e_shoff, e_shnum, e_shstrdnx);
-
-
-    printSections(file, _PATH, sections, e_shnum, e_shstrdnx);
+    if(_FLAG == "-h")
+        printSections(file, _PATH, sections, e_shnum, e_shstrdnx);
 
     return 0;
 }
