@@ -1,10 +1,28 @@
 .globl _start
  
+
+.bss
+z: .skip 4
+
+.data
+x: .word 10
+
+.section .rodata
+msg: .asciz "ola"
+
+.section ".ola"
+make:
+    li t0, 16
+
+.section ".oie"
+    li t1, 16
+
 _start:
     li a0, 247327  #<<<=== RA
     li a1, 0
     li a2, 0
     li a3, -1
+.section ".MC404"
 loop:
     andi t0, a0, 1
     add  a1, a1, t0

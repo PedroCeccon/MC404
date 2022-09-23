@@ -5,10 +5,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define _PATH "test-01/test-01.x"
-#define _FLAG "-h"
+#define _PATH "../lab2/executavel.x"
 
 #define _SIZE(size) size
+#define _MAX(x, y) x>y ? x : y
 #define _SIZE_2BYTE 2
 #define _SIZE_4BYTE 4
 #define _SIZE_8BYTE 8
@@ -31,6 +31,13 @@ typedef struct {
     char size_str[8];
     int name_size;
 } Section;
+
+typedef struct{
+    int strtab_offset;
+    int symbol;
+    int section;
+    Section _section;
+} Symbol;
 
 /*int power(int base, int exponent){
     int result = 1;
@@ -93,10 +100,26 @@ void fillSections(unsigned char *file, Section *sections, int e_shoff, int e_shn
     }
 }
 
+void indexStr(char *str, int index){
+    int digit = 1;
+    int digit_value;
+    if(index>999)
+        index = -1;
+
+    while(index > 0){
+        digit_value = index%10;
+        index -= digit_value;
+        index = index/10;
+        str[3-digit] = digit_value+48;
+        digit++;
+    }
+
+}
+
 void printSections(unsigned char *file, char *file_name, Section *sections, int e_shnum, int e_shstrdnx){
-    int name_sizeMAX = 14;
+    int name_sizeMAX = 13;
     for (int i = 0; i < e_shnum; i++)
-        name_sizeMAX = (name_sizeMAX < sections[i].name_size) ? sections[i].name_size : name_sizeMAX;
+        name_sizeMAX = _MAX(sections[i].name_size, name_sizeMAX);
     char text1[] = ":\tfile format elf32-littleriscv\n\nSections:\nIdx Name";
     char text2[] ="Size     VMA";
     write(1, "\n", 1);
@@ -108,10 +131,9 @@ void printSections(unsigned char *file, char *file_name, Section *sections, int 
     
     for (int i = 0; i < e_shnum; i++){
         write(1, "\n", 1);
-        write(1, "  ", 2);
-        char digit[1];
-        digit[0] = 48 + i;
-        write(1, digit, 1);
+        char index[] = "  0";
+        indexStr(index, i);
+        write(1, index, 3);
         write(1, " ", 1);
         char name[_SIZE(sections[i].name_size)];
         getSectionName(file, name, sections[e_shstrdnx], sections[i]);
@@ -122,6 +144,7 @@ void printSections(unsigned char *file, char *file_name, Section *sections, int 
         write(1, " ", 1);
         write(1, sections[i].vma_str, _SIZE_8BYTE);
     }
+    write(1, "\n", 1);
 }
 
 
@@ -133,6 +156,8 @@ int main(/*int argc, char *argv[]*/){
 
     int e_shoff = 0, e_shnum = 0, e_shstrdnx = 0;
     int sizeFile;
+
+    char _FLAG[] = "-h";
 
     e_shoff = valorMem(file_header, _E_SHOFF, _SIZE_4BYTE);
     e_shnum = valorMem(file_header, _E_SHNUM, _SIZE_2BYTE);
@@ -146,7 +171,7 @@ int main(/*int argc, char *argv[]*/){
     Section sections[_SIZE(e_shnum)];
 
     fillSections(file, sections, e_shoff, e_shnum, e_shstrdnx);
-    if(_FLAG == "-h")
+    if(_FLAG[1] == 'h')
         printSections(file, _PATH, sections, e_shnum, e_shstrdnx);
 
     return 0;
