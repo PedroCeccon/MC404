@@ -36,7 +36,7 @@ typedef struct{
     int strtab_offset;
     int symbol;
     int section;
-    Section _section;
+    int name_size;
 } Symbol;
 
 /*int power(int base, int exponent){
@@ -54,11 +54,44 @@ int valorMem(unsigned char *file, int offset, int size){
     return valor;
 }
 
-int getSectionNameSize(unsigned char *file, Section shstrtab, Section _section){
+int getNameSize(unsigned char *file, Section nametab, int nametab_offset){
     int size = 0;
-    while(file[shstrtab.offset+_section.shstrtab_offset+size] != 0)
+    int a = nametab.offset+nametab_offset;
+    int i =0;
+    while(file[nametab.offset+nametab_offset+size] != 0)
         size++;
     return size++;
+}
+
+void getSectionName(unsigned char *file, char *name, Section shstrtab, Section _section){
+    for(int i = 0; i < _section.name_size; i++)
+        name[i] = file[shstrtab.offset+_section.shstrtab_offset+i];
+}
+
+int compareStrings(char *str1, char *str2, int size_str1, int size_str2){
+    int equal = 1;
+    if(size_str1 != size_str2)
+        equal = 0;
+    else{
+        for(int i = 0; i < size_str1; i++){
+            if(str1[i] != str2[i]){
+                equal = 0;
+                break;
+            }
+        }
+    }
+    return equal;
+}
+
+int getSectionOffset(unsigned char *file, Section *sections, char *str_section, int size_str, int e_shnum, int e_shstrdnx){
+    int section_offset = -1;
+    for(int i = 0; i < e_shnum; i++){
+        char name[_SIZE(sections[i].name_size)];
+        getSectionName(file, name, sections[e_shstrdnx], sections[i]);
+        if(compareStrings(name, str_section, sections[i].name_size, size_str))
+            section_offset = i;
+    }
+    return section_offset;
 }
 
 void intToHexStr(char *str, int value, int number_bytes){
@@ -80,11 +113,6 @@ void intToHexStr(char *str, int value, int number_bytes){
     }
 }
 
-void getSectionName(unsigned char *file, char *name, Section shstrtab, Section _section){
-    for(int i = 0; i < _section.name_size; i++)
-        name[i] = file[shstrtab.offset+_section.shstrtab_offset+i];
-}
-
 void fillSections(unsigned char *file, Section *sections, int e_shoff, int e_shnum, int e_shstrdnx){
     for(int i = 0; i < e_shnum; i++){
         sections[i].header_offset = e_shoff + i*_SECTION_HEADER_SIZE;
@@ -96,7 +124,20 @@ void fillSections(unsigned char *file, Section *sections, int e_shoff, int e_shn
         intToHexStr(sections[i].size_str, sections[i].size, _SIZE_4BYTE);
     }
     for(int i = 0; i < e_shnum; i++){
-        sections[i].name_size = getSectionNameSize(file, sections[e_shstrdnx], sections[i]);
+        sections[i].name_size = getNameSize(file, sections[e_shstrdnx], sections[i].shstrtab_offset);
+    }
+}
+
+void fillSymbolTable(unsigned char *file, Section *sections, Symbol *symbol_table, int symbols_num, int symtab, int strtab){
+    int offset_symtab = sections[symtab].offset + 16;
+    for(int i = 0; i < symbols_num - 1; i++){
+        symbol_table[i].section = valorMem(file, offset_symtab + 14, _SIZE_2BYTE);
+        symbol_table[i].symbol = valorMem(file, offset_symtab + 4, _SIZE_4BYTE);
+        symbol_table[i].strtab_offset = valorMem(file, offset_symtab, _SIZE_4BYTE);
+        symbol_table[i].name_size = getNameSize(file, sections[strtab], symbol_table[i].strtab_offset);
+        offset_symtab += 16;
+        Symbol f = symbol_table[i];
+        int a = 2;
     }
 }
 
@@ -171,6 +212,11 @@ int main(/*int argc, char *argv[]*/){
     Section sections[_SIZE(e_shnum)];
 
     fillSections(file, sections, e_shoff, e_shnum, e_shstrdnx);
+    int symtab = getSectionOffset(file, sections, ".symtab", 7, e_shnum, e_shstrdnx);
+    int strtab = getSectionOffset(file, sections, ".strtab", 7, e_shnum, e_shstrdnx);
+    int symbols_num = sections[symtab].size/16;
+    Symbol symbol_table[_SIZE(symbols_num-1)];
+    fillSymbolTable(file, sections, symbol_table, symbols_num, symtab, strtab);
     if(_FLAG[1] == 'h')
         printSections(file, _PATH, sections, e_shnum, e_shstrdnx);
 
