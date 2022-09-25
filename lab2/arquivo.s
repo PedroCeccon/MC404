@@ -17,20 +17,23 @@ make:
 .section ".oie"
     li t1, 16
 
+.text
+__z:
 _start:
+
     li a0, 247327  #<<<=== RA
     li a1, 0
     li a2, 0
     li a3, -1
-.section ".MC404"
+maf:
 loop:
+
     andi t0, a0, 1
     add  a1, a1, t0
     xor  a2, a2, t0
     addi a3, a3, 1
     srli a0, a0, 1
     bnez a0, loop
- 
 end:
     la a0, result
     sw a1, 0(a0)

@@ -1,0 +1,3 @@
+/home/pedro/MC404/cmake-build-debug/CMakeFiles/MC404.dir
+/home/pedro/MC404/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/pedro/MC404/cmake-build-debug/CMakeFiles/rebuild_cache.dir
