@@ -1,6 +1,0 @@
-
-test-01.x:	file format elf32-littleriscv
-
-SYMBOL TABLE:
-000110c0 l       .text	00000000 _start
-000110b4 l       .text	00000000 test
