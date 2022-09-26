@@ -102,7 +102,7 @@ unsigned int getSectionIndex(unsigned char *file, Section *sections, char *str_s
     return section_index;
 }
 
-void intToHexStr(char *str, unsigned int value, int number_bytes){
+void intToHexStr(char *str, unsigned int value, int number_bytes, char fill){
     int digit = 1;
     int digit_value;
     int number_nimbles = number_bytes * 2;
@@ -116,7 +116,7 @@ void intToHexStr(char *str, unsigned int value, int number_bytes){
         digit++;
     }
     while(digit <= number_nimbles){
-        str[number_nimbles-digit] = 48;
+        str[number_nimbles-digit] = fill;
         digit++;
     }
 }
@@ -126,10 +126,10 @@ void fillSections(unsigned char *file, Section *sections, unsigned int e_shoff, 
         sections[i].header_offset = e_shoff + i*_SECTION_HEADER_SIZE;
         sections[i].shstrtab_offset = memValue(file, sections[i].header_offset, _SIZE_4BYTE);
         sections[i].vma = memValue(file, sections[i].header_offset + _SH_ADDR, _SIZE_4BYTE);
-        intToHexStr(sections[i].vma_str, sections[i].vma, _SIZE_4BYTE);
+        intToHexStr(sections[i].vma_str, sections[i].vma, _SIZE_4BYTE, '0');
         sections[i].offset = memValue(file, sections[i].header_offset + _SH_OFFSET, _SIZE_4BYTE);
         sections[i].size = memValue(file, sections[i].header_offset + _SH_SIZE, _SIZE_4BYTE);
-        intToHexStr(sections[i].size_str, sections[i].size, _SIZE_4BYTE);
+        intToHexStr(sections[i].size_str, sections[i].size, _SIZE_4BYTE, '0');
     }
     for(int i = 0; i < e_shnum; i++){
         sections[i].name_size = getNameSize(file, sections[e_shstrdnx], sections[i].shstrtab_offset);
@@ -142,9 +142,9 @@ void fillSymbolTable(unsigned char *file, Section *sections, Symbol *symbol_tabl
     for(int i = 0; i < symbols_num; i++){
         symbol_table[i].st_name = memValue(file, offset_symtab, _SIZE_4BYTE);
         symbol_table[i].st_value = memValue(file, offset_symtab + _ST_VALUE, _SIZE_4BYTE);
-        intToHexStr(symbol_table[i].value_str, symbol_table[i].st_value, _SIZE_4BYTE);
+        intToHexStr(symbol_table[i].value_str, symbol_table[i].st_value, _SIZE_4BYTE, '0');
         symbol_table[i].st_size = memValue(file, offset_symtab + _ST_SIZE, _SIZE_4BYTE);
-        intToHexStr(symbol_table[i].size_str, symbol_table[i].st_size, _SIZE_4BYTE);
+        intToHexStr(symbol_table[i].size_str, symbol_table[i].st_size, _SIZE_4BYTE, '0');
         symbol_table[i].st_info = memValue(file, offset_symtab + _ST_INFO, _SIZE_1BYTE);
         symbol_table[i].st_shndx = memValue(file, offset_symtab + _ST_SHNDX, _SIZE_2BYTE);
         symbol_table[i].name_size = getNameSize(file, sections[strtab], symbol_table[i].st_name);
@@ -171,6 +171,34 @@ void indexStr(char *str, int index){
 
 }
 
+int getLabelsSection(int *labels_text_ndx, Section _section, Symbol *symbol_table, int  symbols_num){
+    int labels_counter = 0;
+    for(unsigned int i = _section.vma; i < _section.vma+_section.size; i+=4){
+        for(int j = 0; j < symbols_num; j++){
+            if(symbol_table[j].st_value == i){
+                labels_text_ndx[labels_counter] = j;
+                labels_counter++;
+                break;
+            }
+        }
+    }
+    return labels_counter;
+}
+
+void printByte(int byte){
+    int digit_value, digit = 1;
+    char byte_str[] = "   ";
+    while(byte > 0){
+        digit_value = byte%16;
+        byte -= digit_value;
+        byte = byte/16;
+        int ascii_complement = (digit_value<10 ? 48 : 87);
+        byte_str[2-digit] = digit_value+ascii_complement;
+        digit++;
+    }
+    write(1, byte_str, 3);
+}
+
 void printHeader(char *file_name, int name_size){
     char text[] = ":\tfile format elf32-littleriscv\n\n";
     write(1, "\n", 1);
@@ -178,9 +206,35 @@ void printHeader(char *file_name, int name_size){
     write(1, text, sizeof(text)-1);
 }
 
-void printInstructions(unsigned char *file, unsigned int text_offset, Symbol *symbol_table, unsigned int _start){
-    char text[] = "\n Disassembly of section .text:\n";
-    write(1, text, sizeof(text)-1);
+void printInstructions(unsigned char *file, Section _text, Section _strtab, Symbol *symbol_table, int *labels_ndx){
+    int label_counter = 0;
+    char str[] = "\nDisassembly of section .text:\n";
+    int vma = _text.vma, offset = _text.offset;
+    write(1, str, sizeof(str)-1);
+    for(unsigned int i = 0; i < _text.size; i+=4){
+        if(symbol_table[labels_ndx[label_counter]].st_value == i + vma){
+            write(1, "\n", 1);
+            write(1, symbol_table[labels_ndx[label_counter]].value_str, _SIZE_8BYTE);
+            write(1, " <", 2);
+            char name[_SIZE(symbol_table[labels_ndx[label_counter]].name_size)];
+            getName(file, name, _strtab, symbol_table[labels_ndx[label_counter]].name_size, symbol_table[labels_ndx[label_counter]].st_name);
+            write(1, name, symbol_table[labels_ndx[label_counter]].name_size);
+            write(1, ">:\n", 3);
+            label_counter++;
+        }
+        char adress[8];
+        intToHexStr(adress, i + vma, _SIZE_4BYTE, ' ');
+        write(1, adress, 8);
+        write(1, ": ", 3);
+        for(unsigned int j = i + offset; j < i + offset + 4; j++) {
+            char byte[2];
+            intToHexStr(byte, file[j], _SIZE_1BYTE, '0');
+            write(1, byte, 2);
+            write(1, " ", 1);
+        }
+        write(1, "\n", 1);
+        int instruction = memValue(file, i + offset, _SIZE_4BYTE);
+    }
 }
 
 void printSymbols(unsigned  char  *file, Section *sections, Symbol *symbol_table, int strtab, int symbols_num, unsigned int e_shnum, unsigned int e_shstrdnx){
@@ -248,7 +302,7 @@ int main(/*int argc, char *argv[]*/){
     unsigned int e_shoff = 0, e_shnum = 0, e_shstrdnx = 0;
     int sizeFile;
 
-    char _FLAG[] = "-t";
+    char _FLAG[] = "-d";
 
     e_shoff = memValue(file_header, _E_SHOFF, _SIZE_4BYTE);
     e_shnum = memValue(file_header, _E_SHNUM, _SIZE_2BYTE);
@@ -267,12 +321,17 @@ int main(/*int argc, char *argv[]*/){
     int symbols_num = sections[symtab].size/16 - 1;
     Symbol symbol_table[_SIZE(symbols_num)];
     fillSymbolTable(file, sections, symbol_table, symbols_num, symtab, strtab);
+    int text = getSectionIndex(file, sections, ".text", 5, e_shnum, e_shstrdnx);
+    int labels_text_ndx[_SIZE(symbols_num)];
+    int labels_text_num = getLabelsSection(labels_text_ndx, sections[text], symbol_table, symbols_num);
 
     printHeader(_PATH, sizeof(_PATH)-1);
     if(_FLAG[1] == 'h')
         printSections(file, sections, e_shnum, e_shstrdnx);
     if(_FLAG[1] == 't')
         printSymbols(file, sections, symbol_table, strtab, symbols_num, e_shnum, e_shstrdnx);
+    if(_FLAG[1] == 'd')
+        printInstructions(file, sections[text], sections[strtab], symbol_table, labels_text_ndx);
 
     return 0;
 }

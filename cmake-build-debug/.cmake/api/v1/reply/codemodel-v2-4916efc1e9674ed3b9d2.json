@@ -6,7 +6,7 @@
 			[
 				{
 					"build" : ".",
-					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.23"
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "MC404::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-MC404-Debug-973e9048b0514611f269.json",
+					"jsonFile" : "target-MC404-Debug-2a727637de06cdbf2d94.json",
 					"name" : "MC404",
 					"projectIndex" : 0
 				}
@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/pedro/MC404/cmake-build-debug",
-		"source" : "/home/pedro/MC404"
+		"build" : "C:/Users/PedroCeccon/Documents/MC404/MC404/cmake-build-debug",
+		"source" : "C:/Users/PedroCeccon/Documents/MC404/MC404"
 	},
 	"version" : 
 	{

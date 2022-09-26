@@ -2,7 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "MC404"
+			"path" : "MC404.exe"
+		},
+		{
+			"path" : "MC404.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -68,12 +71,16 @@
 			{
 				"fragment" : "",
 				"role" : "flags"
+			},
+			{
+				"fragment" : "-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32",
+				"role" : "libraries"
 			}
 		],
 		"language" : "C"
 	},
 	"name" : "MC404",
-	"nameOnDisk" : "MC404",
+	"nameOnDisk" : "MC404.exe",
 	"paths" : 
 	{
 		"build" : ".",
