@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "C:/Users/PedroCeccon/Documents/MC404/MC404/trabalho1/desmontador.c" "CMakeFiles/MC404.dir/trabalho1/desmontador.c.obj" "gcc" "CMakeFiles/MC404.dir/trabalho1/desmontador.c.obj.d"
+  "/home/pedro/CLionProjects/MC404/trabalho1/desmontador.c" "CMakeFiles/MC404.dir/trabalho1/desmontador.c.o" "gcc" "CMakeFiles/MC404.dir/trabalho1/desmontador.c.o.d"
   )
 
 # Targets to which this target links.

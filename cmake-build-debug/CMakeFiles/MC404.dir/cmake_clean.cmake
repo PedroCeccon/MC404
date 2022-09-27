@@ -1,10 +1,8 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/MC404.dir/trabalho1/desmontador.c.obj"
-  "CMakeFiles/MC404.dir/trabalho1/desmontador.c.obj.d"
-  "MC404.exe"
-  "MC404.exe.manifest"
+  "CMakeFiles/MC404.dir/trabalho1/desmontador.c.o"
+  "CMakeFiles/MC404.dir/trabalho1/desmontador.c.o.d"
+  "MC404"
   "MC404.pdb"
-  "libMC404.dll.a"
 )
 
 # Per-language clean rules from dependency scanning.

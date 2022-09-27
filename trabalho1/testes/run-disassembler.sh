@@ -1,5 +1,5 @@
 #DISASSM="my_disassembler.x"
-DISASSM="llvm-objdump-12 -M=no-aliases"
+DISASSM="./desmontador"
 OUTDIR="my_output"
 
 echo "==============================================================="
@@ -10,7 +10,7 @@ echo " * Target directory: ${OUTDIR}"
 echo "==============================================================="
 
 # Create output directory
-[-d "${OUTDIR}" ] || mkdir -p "${OUTDIR}"
+
 
 for EXE in bin/*.x; do
     echo "-- Disassembling ${EXE}"
