@@ -20,7 +20,7 @@ make:
 .text
 
 _start:
-    csrrwi a5, 6, 3
+    csrrwi a5, 0x7b1, 3
 
     li a1, 0x11108
     jalr a0, 4(a1)
