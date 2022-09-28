@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-//Alguns defines e macros para facilitar o entendimento do programa, a maioria dos defines contem o offset de valores de interesse
+//Alguns macros para facilitar o entendimento do programa, a maioria dos defines contem o offset de valores de interesse
 #define _SIZE(size) size
 #define _MAX(x, y) x>y ? x : y
 #define _SIZE_1BYTE 1
