@@ -1,5 +1,13 @@
 {
     "configurations": [
+        {
+            "type": "venus",
+            "request": "launch",
+            "name": "Debug Current File",
+            "program": "${file}",
+            "stopOnEntry": true,
+            "openViews": []
+        },
 
         {
             "name": "C/C++: gcc build and debug active file",
