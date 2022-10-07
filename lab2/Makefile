@@ -1,3 +1,6 @@
+clean: executavel.x
+	rm -f arquivo.o
+	
 executavel.x: arquivo.o
 	ld.lld arquivo.o -o executavel.x
 	

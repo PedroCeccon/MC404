@@ -1,3 +1,6 @@
+clean: executavel.x
+	rm -f lab03.o
+
 executavel.x: lab03.o
 	ld.lld lab03.o -o executavel.x
 

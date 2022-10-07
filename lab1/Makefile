@@ -1,3 +1,6 @@
+clean: executavel.x
+	rm -f arquivo1.o arquivo2.o
+
 arquivo1.s: arquivo1.c
 	clang --target=riscv32 -march=rv32g -mabi=ilp32d -mno-relax arquivo1.c -S -o arquivo1.s
 
