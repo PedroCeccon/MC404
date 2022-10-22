@@ -19,6 +19,15 @@ height: .skip 3
 _start:
     jal open
     jal read
+    li t3, 0xa
+    li t4, 0x20
+1:
+    lb t0, 0(a1)
+    addi a1, a1, 1
+    beq t0, t3, 12
+    beq t0, t4, 8
+    j 1b
+
     jal readHeader
     addi s0, a1, 1
     jal setCanvasSize
@@ -54,7 +63,6 @@ fillMatrix:
 
 
 readHeader:
-    addi a1, a1, 3
     la a2, width
     jal s0, getData
     mv s1, a0
