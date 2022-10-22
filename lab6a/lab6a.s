@@ -4,94 +4,101 @@
 
 .data
 input_file: .asciz "imagem.pgm"
-MAXsize: .word 262144
+MAXsize: .word 262159
 
 .bss
-imagem: .skip 262144
+file: .skip 262159
 .align 2
-headerLine: .skip 8
+width: .skip 3
 .align 2
-size: .skip 4
-linhas: .skip 2
-colunas: .skip 2
+height: .skip 3
 .align 2
 
-.text
+.text   
 .globl _start
 _start:
     jal open
-
-    jal s0, ignoreLine
-    jal s0, ignoreLine
-
-    jal s0, readLine
-    jal s0, getSize
+    jal read
+    jal readHeader
+    addi s0, a1, 1
     jal setCanvasSize
+    li t3, 0xa
+    li t4, 0x20
+1:
+    lb t0, 0(s0)
+    addi s0, s0, 1
+    beq t0, t3, 12
+    beq t0, t4, 8
+    j 1b
 
-    jal s0, ignoreLine
-    
-    jal s0, readImage
-
-    jal read
-    jal write
-    j exit
-
-getSize:
-    li t6, 6
-
-readImage:
-    li t6, 6
-
-
-ignoreLine:
-    li t2, 0xa
-    la a1, headerLine
-    li a2, 1
-    jal read
-    lb t3, 0(a1)
-    li a1, 1
-    jal lseek
-    confere:
-    bne t3, t2, ignoreLine
-    jr s0
-
-readLine:
     li t0, 0
-    li t1, 8
-    li t2, 0xa
-readByte:
-    la a1, headerLine
-    li a2, 1
-    jal read
-    li a1, 1
-    jal lseek
-    lb t3, 0(a1)
-    beq t3, t2, 20
+    li t1, 0
+fillMatrix:
+    li a2, 0xff
+    lbu t2, 0(s0)
+    addi s0, s0, 1
+    slli t2, t2, 8
+    add a2, a2, t2
+    slli t2, t2, 8
+    add a2, a2, t2
+    slli t2, t2, 8
+    add a2, a2, t2
+    jal setPixel
+    addi t1, t1, 1
+    bne t1, s2, fillMatrix
+    coluna:
+    li t1, 0
     addi t0, t0, 1
-    beq t0, t1, 12
+    bne t0, s1, fillMatrix
+    jal exit
+
+
+readHeader:
+    addi a1, a1, 3
+    la a2, width
+    jal s0, getData
+    mv s1, a0
     addi a1, a1, 1
-    j readByte
+    la a2, height
+    mv s2, a0
+    jal s0, getData
+    ret
+
+getData:
+    li t1, 0
+    mv t2, a2
+    li t3, 0xa
+    li t4, 0x20
+1:
+    lb t0, 0(a1)
+    addi a1, a1, 1
+    beq t0, t3, stringToInt
+    beq t0, t4, stringToInt
+    sb t0, 0(a2)
+    addi a2, a2, 1
+    addi t1, t1, 1
+    j 1b
+
+stringToInt:
+    li a0, 0
+    li t3, 1
+    li t4, 10
+2:
+    addi a2, a2, -1
+    lb t0, 0(a2)
+    addi t0, t0, -48
+    mul t0, t0, t3
+    mul t3, t3, t4
+    add a0, a0, t0
+    bne a2, t2, 2b
     jr s0
 
-lseek:
-    li a2, 1
-    li a7, 62
-    ecall
-    ret
 
 read:
     # a0                    # file descriptor
-    # a1                    # buffer
-    # a2                    # size (lendo apenas 1 byte, mas tamanho é variável)
+    la a1, file                    # buffer
+    lw a2, MAXsize                 # size (lendo apenas 1 byte, mas tamanho é variável)
     li a7, 63               # syscall read (63)
-    ecall
-    ret
-
-write:
-    li a0, 1                # file descriptor = 1 (stdout)
-    #la a1, imagem           # buffer
-    #li a2, 1              # size
-    li a7, 64               # syscall write (64)
     ecall
     ret
 
@@ -109,14 +116,16 @@ open:
     ret
 
 setPixel:
-    # a0                    # coordenada x
-    # a1                    # coordenada x
+    mv a0, t1               # coordenada x
+    mv a1, t0               # coordenada y
     # a2                    # cor (RGBA)
     li a7, 2200             # syscall setPixel
+    ecall
     ret
 
 setCanvasSize:
-    lh a0, colunas
-    lh a1, linhas
+    mv a0, s1
+    mv a1, s2
     li a7, 2201             #syscall setCanvasSize
+    ecall
     ret
