@@ -4,7 +4,6 @@
 
 .data
 input_file: .asciz "imagem.pgm"
-MAXsize: .word 262159
 
 .bss
 file: .skip 262159
@@ -55,7 +54,6 @@ fillMatrix:
     jal setPixel
     addi t1, t1, 1
     bne t1, s2, fillMatrix
-    coluna:
     li t1, 0
     addi t0, t0, 1
     bne t0, s1, fillMatrix
@@ -105,7 +103,7 @@ stringToInt:
 read:
     # a0                    # file descriptor
     la a1, file                    # buffer
-    lw a2, MAXsize                 # size (lendo apenas 1 byte, mas tamanho é variável)
+    li a2, 262159               # size (lendo apenas 1 byte, mas tamanho é variável)
     li a7, 63               # syscall read (63)
     ecall
     ret
