@@ -12,6 +12,24 @@ _start:
     la a0, my_string
     jal gets
     jal atoi
+    beqz a0, 1f
+    li s0, 1000
+    mv s1, a0
+    mul a0, a0, s0
+    jal sleep
+    mv a0, s1
+    la a1, my_string
+    li a2, 10
+    jal itoa
+    la a0, my_string
+    jal puts
+    j _start
+    1:
+    li a0, -1
+    la a1, my_string
+    li a2, 10
+    jal itoa
+    la a0, my_string
     jal puts
     li a0, 0
     j exit
@@ -123,6 +141,77 @@ isspace:
     4:
     li a0, 1
     ret
+
+.globl itoa
+itoa:
+    mv t1, sp
+    mv t2, a1
+    li t3, 10
+    bgtz a0, 1f
+        li t0, -1
+        mul a0, a0, t0
+        bne a2, t3, 1f
+            li t0, 0x2d
+            sb t0, 0(t2)
+            addi t2, t2, 1
+    1:
+        rem t0, a0, a2
+        addi sp, sp, -16
+        sw t0, 0(sp)
+        div a0, a0, a2
+        bne a0, zero, 1b
+    1:
+        lw t0, 0(sp)
+        addi sp, sp, 16
+        blt t0, t3, 12
+        addi t0, t0, 87
+        j 8
+        addi t0, t0, 48
+        sb t0, 0(t2)
+        addi t2, t2, 1
+        bne sp, t1, 1b
+    li t0, 0
+    sb t0, 0(t2)
+    mv a0, a1
+    ret
+
+.globl time
+time:
+    addi sp, sp, -16
+    mv a0, sp
+    mv a1, zero
+    li a7, 169
+    ecall
+    lw t0, 0(sp)
+    lw t1, 8(sp)
+    addi sp, sp, 16
+    li t2, 1000
+    mul t0, t0, t2
+    div t1, t1, t2
+    add a0, t0, t1
+    ret
+
+.globl sleep
+sleep:
+    addi sp, sp, -16
+    sw ra, 0(sp)
+    mv t0, a0
+    mv t2, t0
+    li t1, -1
+    jal time
+    bgtz a0, 8
+    mul a0, a0, t1
+    add t0, t2, a0
+    confere:
+    1:
+        jal time
+        bgtz a0, 8
+        mul a0, a0, t1
+        blt a0, t0, 1b
+    lw ra, 0(sp)
+    addi sp, sp, 16
+    ret
+
 
 .globl exit
 exit:
