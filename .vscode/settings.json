@@ -3,6 +3,8 @@
         "features.h": "c",
         "fcntl.h": "c",
         "types.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "cstdio": "c",
+        "libc-header-start.h": "c"
     }
 }

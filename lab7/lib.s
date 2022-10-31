@@ -1,42 +1,13 @@
+
 #Nome: Pedro Henrique Peracoli Pereira Ceccon
 #RA: 247327
 #Turma: MC404 B
 
-.data 
-my_string: .skip 12
-.byte 0
-
 .text
-.globl _start
-_start:
-    la a0, my_string
-    jal gets
-    jal atoi
-    beqz a0, 1f
-    li s0, 1000
-    mv s1, a0
-    mul a0, a0, s0
-    jal sleep
-    mv a0, s1
-    la a1, my_string
-    li a2, 10
-    jal itoa
-    la a0, my_string
-    jal puts
-    j _start
-    1:
-    li a0, -1
-    la a1, my_string
-    li a2, 10
-    jal itoa
-    la a0, my_string
-    jal puts
-    li a0, 0
-    j exit
-
 .globl puts
 puts:
     li a2, 0
+    mv a1, a0
     1:
         lbu t0, 0(a0)
         addi a0, a0, 1
@@ -48,7 +19,6 @@ puts:
     addi sp, sp, -16
     sb t0, 0(sp)
     li a0, 1
-    la a1, my_string
     li a7, 64
     ecall
     li a0, 1
@@ -195,23 +165,144 @@ time:
 sleep:
     addi sp, sp, -16
     sw ra, 0(sp)
-    mv t0, a0
-    mv t2, t0
-    li t1, -1
+    mv t3, a0
+    li t4, -1
     jal time
     bgtz a0, 8
-    mul a0, a0, t1
-    add t0, t2, a0
+    mul a0, a0, t4
+    add t3, t3, a0
     confere:
     1:
         jal time
         bgtz a0, 8
-        mul a0, a0, t1
-        blt a0, t0, 1b
+        mul a0, a0, t4
+        blt a0, t3, 1b
     lw ra, 0(sp)
     addi sp, sp, 16
     ret
 
+.globl approx_sqrt
+approx_sqrt:
+    li t3, 1
+    bgt a0, t3, 8
+    ret
+    li t0, 1
+    srli t1, a0, 1
+iteration:
+    div t2, a0, t1
+    add t1, t1, t2
+    srli t1, t1, 1
+    addi t0, t0, 1
+    bne a1, t0, iteration
+    mv a0, t1
+    ret
+
+.globl imageFilter
+imageFilter:
+    addi sp, sp, -48
+    sw ra, 44(sp)
+    sw s0, 40(sp)
+    sw s1, 36(sp)
+    sw s2, 32(sp)
+    sw s3, 28(sp)
+    sw s4, 24(sp)
+    sw s5, 20(sp)
+    sw s6, 16(sp)
+    sw s7, 12(sp)
+    sw s8, 8(sp)
+    sw s11, 4(sp)
+
+    mv s0, a0
+    mv s1, a1
+    mv s2, a2
+    jal setCanvasSize
+    li t0, 0
+    li t1, 0
+    li t3, 0xff
+    addi t4, s1, -1
+    addi t5, s2, -1
+fillMatrix:
+    mv s3, s0
+    mv s4, a3
+    jal getColor
+    jal setPixel
+    addi t1, t1, 1
+    bne t1, s2, fillMatrix
+    li t1, 0
+    addi t0, t0, 1
+    bne t0, s1, fillMatrix
+    lw s11, 4(sp)
+    lw s8, 8(sp)
+    lw s7, 12(sp)
+    lw s6, 16(sp)
+    lw s5, 20(sp)
+    lw s4, 24(sp)
+    lw s3, 28(sp)
+    lw s2, 32(sp)
+    lw s1, 36(sp)
+    lw s0, 40(sp)
+    lw ra, 44(sp)
+    addi sp, sp, 32
+    ret
+
+getColor: 
+    beq t0, zero, black
+    beq t1, zero, black
+    beq t0, t4, black
+    beq t1, t5, black
+    li s5, 0
+    li s6, 0
+    li t6, 0
+    li s11, 3
+    1:
+        lb s7, 0(s4)
+        addi s4, s4, 1
+        add s8, t0, s6
+        addi s8, s8, -1
+        mul s8, s8, s1
+        add s8, s8, t1
+        add s8, s8, s5
+        addi s8, s8, -1
+        add s3, s0, s8
+        lbu s8, 0(s3)
+        mul s8, s8, s7
+        add t6, t6, s8
+        add s5, s5, 1
+        blt s5, s11, 1b
+        li s5, 0
+        addi s6, s6, 1
+        blt s6, s11, 1b
+    ble t6, zero, black
+    bge t6, t3, white
+    mv a2, t6
+    slli a2, a2, 8
+    add a2, a2, t6
+    slli a2, a2, 8
+    add a2, a2, t6
+    slli a2, a2, 8
+    add a2, a2, t3
+    ret
+black:
+    li a2, 0xff
+    ret
+white:
+    li a2, 0xffffffff
+    ret
+
+setPixel:
+    mv a0, t1               # coordenada x
+    mv a1, t0               # coordenada y
+    # a2                    # cor (RGBA)
+    li a7, 2200             # syscall setPixel
+    ecall
+    ret
+
+setCanvasSize:
+    mv a0, s1
+    mv a1, s2
+    li a7, 2201             #syscall setCanvasSize
+    ecall
+    ret
 
 .globl exit
 exit:
