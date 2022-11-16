@@ -8,6 +8,8 @@ executavel.x: teste.o lib.o
 lib.o: lib.s
 	clang --target=riscv32 -march=rv32g -mabi=ilp32d -mno-relax lib.s -g -c -o lib.o
 
+teste.x: teste.o
+	ld.lld teste.o -o teste.x
 teste.o: teste.s
 	clang --target=riscv32 -march=rv32g -mabi=ilp32d -mno-relax teste.s -g -c -o teste.o
 

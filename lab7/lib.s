@@ -215,6 +215,8 @@ imageFilter:
     mv s0, a0
     mv s1, a1
     mv s2, a2
+    mv a0, s1
+    mv a1, s2
     jal setCanvasSize
     li t0, 0
     li t1, 0
@@ -298,8 +300,6 @@ setPixel:
     ret
 
 setCanvasSize:
-    mv a0, s1
-    mv a1, s2
     li a7, 2201             #syscall setCanvasSize
     ecall
     ret
