@@ -30,20 +30,21 @@ _start:
         jal break
         jal getNewPosition
         jal produtoInterno
-        li t6, -150
+        beq s3, zero, 3f
+        li t6, -200
         bge s3, t6, 1f
-            li t6, -15
+            li t6, -40
             jal turn
             j 3f
         1:
-        li t6, 150
+        li t6, 200
         ble s3, t6, 2f
-            li t6, 15
+            li t6, 40
             jal turn
             j 3f
         2:
             mv t6, s3
-            li t0, 10
+            li t0, 5
             div t6, t6, t0
             jal turn
         3:
