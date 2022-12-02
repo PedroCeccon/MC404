@@ -152,6 +152,11 @@ logica_controle:
     bnez t3, 4f
     mv t0, a0
     mv t1, a2
+    li t2, 73
+    li t3, -19
+    sub t5, t6, a0
+    sub t6, a2, t5
+
     li a0, 1
     li a1, 0
     li a7, 10
