@@ -154,8 +154,8 @@ logica_controle:
     mv t1, a2
     li t2, 73
     li t3, -19
-    sub t5, t6, a0
-    sub t6, a2, t5
+    sub t5, t3, a2
+    sub t6, t2, a0
 
     li a0, 1
     li a1, 0
@@ -167,8 +167,10 @@ logica_controle:
         ecall
         jal goal
         bnez t3, 4f
-        mul t0, a0, a0
-        mul t1, a2, a2
+        sub a0, t0, a0
+        sub a2, t1, a2
+        mul t0, a0, t5
+        mul t1, a2, t6
         add t0, t0, t1
         blt t0, t3, 1b
     li t0, 73
