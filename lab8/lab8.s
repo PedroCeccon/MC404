@@ -24,22 +24,22 @@ _start:
         jal goal
         mul s6, s3, s3
         mul s7, s4, s4
-        add s6, s6, s7
+        add s6, s6, s7logica_controle
         blt s6, a3, setDistance
 
         jal break
         jal getNewPosition
         jal produtoInterno
         beq s3, zero, 3f
-        li t6, -200
+        li t6, -350
         bge s3, t6, 1f
-            li t6, -40
+            li t6, -70
             jal turn
             j 3f
         1:
-        li t6, 200
+        li t6, 350
         ble s3, t6, 2f
-            li t6, 40
+            li t6, 70
             jal turn
             j 3f
         2:
@@ -107,6 +107,6 @@ goal:
     mul t0, t0, t0
     mul t1, t1, t1
     add t0, t0, t1
-    li t3, 1200
+    li t3, 1000
     blt t0, t3, stop
     ret

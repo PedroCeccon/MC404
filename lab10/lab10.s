@@ -14,7 +14,7 @@
 
 ISR_stack: .skip 16
 ISR_stack_end:
-program_stack: .skip 16
+program_stack: .skip 48
 program_stack_end:
 
 .text
@@ -30,22 +30,23 @@ Syscall_set_engine_and_steering:
     li t0, -127
     blt a1, t0, 1f
     li t0, self_driving_car
-    sb zero, 22(t0)
-    sb a0, 21(t0)
-    sb a1, 20(t0)
+    sb zero, 0x22(t0)
+    sb a0, 0x21(t0)
+    sb a1, 0x20(t0)
     li a0, 0
     j 12
     1:
     li a0, -1
-    ret
+    j return_syscall
 
 Syscall_set_handbreak:
     li t0, 1
     bne a0, t0, 1f
     li t0, self_driving_car
-    sb a0, 22(t0)
+    sb zero, 0x21(t0)
+    sb a0, 0x22(t0)
     1:
-    ret
+    j return_syscall
 
 Syscall_read_sensors:
     li t0, self_driving_car
@@ -59,16 +60,16 @@ Syscall_read_sensors:
         addi t0, t0, 1
         addi a0, a0, 1
         blt t0, t1, 1b
-    ret
+    j return_syscall
 
 Syscall_get_position:
     li t0, self_driving_car
     li t1, 1
     sb t1, 0(t0)
-    lw a0, 10(t0)
-    lw a1, 14(t0)
-    lw a2, 18(t0)
-    ret
+    lw a0, 0x10(t0)
+    lw a1, 0x14(t0)
+    lw a2, 0x18(t0)
+    j return_syscall
 
 
 int_handler:
@@ -88,11 +89,11 @@ int_handler:
     beq a7, t0, Syscall_read_sensors
     li t0, get_position
     beq a7, t0, Syscall_get_position
+    return_syscall:
 
-    csrr t0, mepc   # carrega endereço de retorno (endereço 
-                    # da instrução que invocou a syscall)
-    addi t0, t0, 4  # soma 4 no endereço de retorno (para retornar após a ecall) 
-    csrw mepc, t0   # armazena endereço de retorno de volta no mepc
+    csrr t0, mepc   
+    addi t0, t0, 4 
+    csrw mepc, t0  
 
     lw ra, 8(sp)
     lw t1, 4(sp)
@@ -113,10 +114,6 @@ _start:
     la t0, ISR_stack_end
     csrw mscratch, t0
 
-    li t0, gpt
-    li t1, 100
-    sw t1, 8(t0)
-
     csrr t1, mie 
     li t2, 0x800
     or t1, t1, t2
@@ -136,87 +133,125 @@ _start:
 
     mret 
 
-# Escreva aqui o código para mudar para modo de usuário e chamar a função 
-# user_main (definida em outro arquivo). Lembre-se de inicializar a 
-# pilha do usuário para que seu programa possa utilizá-la.
 
 .globl logica_controle
 logica_controle:
-    addi sp, sp, -16   
+    addi sp, sp, -48
     sw ra, 0(sp)
+    sw s1, 4(sp)
+    sw s2, 8(sp)
+    sw s3, 12(sp)
+    sw s4, 16(sp)
+    sw s6, 20(sp)
+    sw s7, 24(sp)
+    sw s8, 28(sp)
+    sw s9, 32(sp)
+    sw s10, 36(sp)
+    sw s11, 40(sp)
 
-    li a7, 15
-    ecall
+    li s10, 73      #x-final
+    li s11, -19     #z-final
+    li t6, 0
 
-    jal goal
-    bnez t3, 4f
-    mv t0, a0
-    mv t1, a2
-    li t2, 73
-    li t3, -19
-    sub t5, t3, a2
-    sub t6, t2, a0
+    getToGoal:
+        jal getInitialData
+        jal set_direction
+        li a3, 3
 
-    li a0, 1
-    li a1, 0
-    li a7, 10
-    ecall
-    li t2, 3
-    1:
-        li a7, 15
-        ecall
+        setDistance:
+        jal getNewPosition
         jal goal
-        bnez t3, 4f
-        sub a0, t0, a0
-        sub a2, t1, a2
-        mul t0, a0, t5
-        mul t1, a2, t6
-        add t0, t0, t1
-        blt t0, t3, 1b
-    li t0, 73
-    mul t0, a0, t0
-    li t1, -19
-    mul t1, a2, t1
-    add t0, t0, t1
-    mv a1, t0
-    li a0, 1
-    li a7, 10
-    li t1, 5
-    blt t0, t1, 3f
-    li t1, -350
-        bge t0, t1, 1f
-            li a1, -70
+        mul s6, s3, s3
+        mul s7, s4, s4
+        add s6, s6, s7
+        blt s6, a3, setDistance
+
+        jal break
+        jal getNewPosition
+        jal produtoInterno
+        beq s3, zero, 3f
+        li t6, -350
+        bge s3, t6, 1f
+            li t6, -70
+            jal set_direction
             j 3f
         1:
-        li t1, 350
-        ble t0, t1, 2f
-            li a1, 70
+        li t6, 350
+        ble s3, t6, 2f
+            li t6, 70
+            jal set_direction
             j 3f
         2:
-            li t1, 5
-            div a1, t0, t1
+            mv t6, s3
+            li t0, 5
+            div t6, t6, t0
+            jal set_direction
         3:
-        ecall
-    4:
+        j getToGoal
+    end:
+
+    lw s11, 40(sp)
+    lw s10, 36(sp)
+    lw s9, 32(sp)
+    lw s8, 28(sp)
+    lw s7, 24(sp)
+    lw s6, 20(sp)
+    lw s4, 16(sp)
+    lw s3, 12(sp)
+    lw s2, 8(sp)
+    lw s1, 4(sp)
+    lw ra, 0(sp)
+
+    addi sp, sp, 48
+    ret
+
+getInitialData:
+    li a7, 15
+    ecall
+    mv s1, a0
+    mv s2, a2
+    sub s9, s10, s1 
+    sub s8, s2, s11
+    ret
+
+getNewPosition:
+    li a7, 15
+    ecall
+    mv a5, a0 #x-pos
+    mv a6, a2 #z-pos
+    sub s3, a5, s1
+    sub s4, a6, s2
+    ret
+
+produtoInterno:
+    mul s3, s8, s3
+    mul s4, s9, s4
+    add s3, s3, s4
+    ret
+
+set_direction:
+    li a0, 1
+    mv a1, t6
+    li a7, 10
+    ecall
+    ret
+
+break:
     li a0, 1
     li a7, 11
     ecall
-    lw ra 0(sp)
-    addi sp, sp, 16
     ret
 
+stop:
+    jal break
+    j end
+
 goal:
-    li t3, 1
-    addi t0, a0, -73
-    addi t1, a2, 19
+    sub t0, a5, s10
+    sub t1, a6, s11
     mul t0, t0, t0
     mul t1, t1, t1
     add t0, t0, t1
-    li t2, 225
-    bgt t0, t2, 1f
-    li t3, 0
-    1:
+    li t3, 1000
+    blt t0, t3, stop
     ret
-
-  # implemente aqui sua lógica de controle, utilizando apenas as 
-  # syscalls definidas.
