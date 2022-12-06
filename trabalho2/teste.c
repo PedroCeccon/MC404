@@ -2,10 +2,11 @@
 
 int main(){
     char my_string[100];
+    char camera[256];
     while (1)
     {
-        gets(my_string);
-        puts(my_string);
+        read_camera(camera);
+        display_image(camera);
     } 
     return 0;
 }

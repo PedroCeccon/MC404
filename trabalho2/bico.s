@@ -234,6 +234,7 @@ get_rotation:
 
 .globl filter_1d_image
 filter_1d_image:
+    
     ret
 
 .globl display_image

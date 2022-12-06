@@ -46,7 +46,7 @@ int set_handbreak(char valor);
   Retorna:
     Nada
 */
-void read_camera(unsigned char* img);
+void read_camera(char* img);
 
 
 /*

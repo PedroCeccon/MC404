@@ -184,8 +184,16 @@ Syscall_draw_line:
     addi t1, t0, 8
     addi t2, t1, 400
     1:
-    sw a0, 0(t1)
-    addi a0, a0, 4
+    lbu t2, 0(a0)
+    addi a0, a0, 1
+    li t3, 255
+    slli t3, t3, 8
+    add t3, t3, t2
+    slli t3, t3, 8
+    add t3, t3, t2
+    slli t3, t3, 8
+    add t3, t3, t2
+    sw t3, 0(t1)
     addi t1, t1, 4
     blt t1, t2, 1b
     li t1, 1
@@ -195,12 +203,21 @@ Syscall_draw_line:
     bnez t1, 2b
     li t1, 400
     sh t1, 2(t0)
-    sw zero, 4(t0)
+    li t1, 100
+    sw t1, 4(t0)
     addi t1, t0, 8
     addi t2, t1, 400
     1:
-    sw a0, 0(t1)
-    addi a0, a0, 4
+    lbu t2, 0(a0)
+    addi a0, a0, 1
+    li t3, 255
+    slli t3, t3, 8
+    add t3, t3, t2
+    slli t3, t3, 8
+    add t3, t3, t2
+    slli t3, t3, 8
+    add t3, t3, t2
+    sw t3, 0(t1)
     addi t1, t1, 4
     blt t1, t2, 1b
     li t1, 1
@@ -210,12 +227,21 @@ Syscall_draw_line:
     bnez t1, 2b
     li t1, 224
     sh t1, 2(t0)
-    sw zero, 4(t0)
+    li t1, 200
+    sw t1, 4(t0)
     addi t1, t0, 8
     addi t2, t1, 224
     1:
-    sw a0, 0(t1)
-    addi a0, a0, 4
+    lbu t2, 0(a0)
+    addi a0, a0, 1
+    li t3, 255
+    slli t3, t3, 8
+    add t3, t3, t2
+    slli t3, t3, 8
+    add t3, t3, t2
+    slli t3, t3, 8
+    add t3, t3, t2
+    sw t3, 0(t1)
     addi t1, t1, 4
     blt t1, t2, 1b
     li t1, 1
@@ -294,10 +320,6 @@ _start:
     la t0, systemStack_end
     csrw mscratch, t0
 
-    csrr t1, mie 
-    li t2, 0x800
-    or t1, t1, t2
-    csrw mie, t1
 
     csrr t1, mstatus 
     ori t1, t1, 0x8 
