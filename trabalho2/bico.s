@@ -32,6 +32,7 @@ puts:
 .globl gets
 gets:
     mv a1, a0
+    mv t4, a1
     li a2, 1
     li a7, 17
     li t1, '\n'
@@ -40,16 +41,20 @@ gets:
     1:
         li a0, 0
         ecall
+        mv a1, t4
         lb t0, 0(a1)
         beq t0, t1, 1f
         blt t0, zero, 1f
         bgt t0, t2, 1f
         addi a1, a1, 1
+        addi t4, t4, 1
         j 1b
     1:
     li t0, 0
     sb t0, 0(a1)
     mv a0, t3
+    .globl confere
+    confere:
     ret
 
 .globl atoi
@@ -206,35 +211,72 @@ read_camera:
 
 .globl read_sensor_distance
 read_sensor_distance:
+    li a7, 13
+    ecall
     ret
 
 .globl get_position
 get_position:
-    mv t0, a0
-    mv t1, a1
-    mv t2, a2
     li a7, 15
     ecall
-    sw a0, 0(t0)
-    sw a1, 0(t1)
-    sw a2, 0(t2)
     ret
 
 .globl get_rotation
 get_rotation:
-    mv t0, a0
-    mv t1, a1
-    mv t2, a2
     li a7, 16
     ecall
-    sw a0, 0(t0)
-    sw a1, 0(t1)
-    sw a2, 0(t2)
     ret
 
 .globl filter_1d_image
 filter_1d_image:
+    # a0: image (256-byte array)
+    # a1: filter (3-byte array)
+    addi sp, sp, -256
+    mv t6, sp
+    addi t5, sp, 255
+    mv t4, a0
+    sb zero, 0(t6)
+    addi t6, t6, 1
+    addi t4, t4, 1
+    1:
+    addi t0, t4, -1
+    lbu t1, 0(t0)
+    lb t2, 0(a1)
+    mul t3, t1, t2
+    lbu t1, 1(t0)
+    lb t2, 1(a1)
+    mul t1, t1, t2
+    add t3, t3, t1
+    lbu t1, 2(t0)
+    lb t2, 2(a1)
+    mul t1, t1, t2
+    add t3, t3, t1
+    bltz t3, 2f
+    li t1, 255
+    bgt t3, t1, 3f
+    2:
+    li t3, 0
+    j 4f
+    3:
+    li t3, 255
+    4:
+    sb t3, 0(t6)
+    addi t6, t6, 1
+    addi t4, t4, 1
+    blt t6, t5, 1b
+    sb zero, 0(t6)
     
+    li t0, 0
+    li t1, 256
+
+    1:
+    lbu t2, 0(sp)
+    sb t2, 0(a0)
+    addi sp, sp, 1
+    addi a0, a0, 1
+    addi t0, t0, 1
+    blt t0, t1, 1b
+
     ret
 
 .globl display_image

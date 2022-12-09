@@ -50,7 +50,7 @@ Syscall_set_engine_and_steering:
 Syscall_set_handbreak:
     li t0, 1
     beq a0, t0, 1f
-    beq a0, zero, 1f
+    beqz a0, 1f
     li a0, -1
     j return_syscall
     1:
@@ -65,9 +65,9 @@ Syscall_read_sensors:
     sb t1, 1(t0)
     1:
     lb t1, 1(t0)
-    bne t1, zero, 1b
-    addi t0, t0, 24
-    add t1, t0, 256
+    bnez t1, 1b
+    addi t0, t0, 0x24
+    addi t1, t0, 256
     1:
         lb a1, 0(t0)
         sb a1, 0(a0)
@@ -78,26 +78,12 @@ Syscall_read_sensors:
 
 Syscall_read_sensor_distance:
     li t0, self_driving_car
-    li t1, 1
-    sb t1, 2(t0)
-    1:
-    lb t1, 2(t0)
-    bne t1, zero, 1b
-    lw a0, 0x1c(t0)
-    li t0, self_driving_car
     li t1, 2
     sb t1, 2(t0)
     1:
     lb t1, 2(t0)
-    bne t1, zero, 1b
-    lw a1, 0x1c(t0)
-    li t0, self_driving_car
-    li t1, 3
-    sb t1, 2(t0)
-    1:
-    lb t1, 2(t0)
-    bne t1, zero, 1b
-    lw a2, 0x1c(t0)
+    bnez t1, 1b
+    lw a0, 0x1c(t0)
     j return_syscall
 
 Syscall_get_position:
@@ -106,10 +92,13 @@ Syscall_get_position:
     sb t1, 0(t0)
     1:
     lb t1, 0(t0)
-    bne t1, zero, 1b
-    lw a0, 0x10(t0)
-    lw a1, 0x14(t0)
-    lw a2, 0x18(t0)
+    bnez t1, 1b
+    lw t1, 0x10(t0)
+    sw t1, 0(a0)
+    lw t1, 0x14(t0)
+    sw t1, 0(a1)
+    lw t1, 0x18(t0)
+    sw t1, 0(a2)
     j return_syscall
 
 Syscall_get_rotation:
@@ -118,16 +107,18 @@ Syscall_get_rotation:
     sb t1, 0(t0)
     1:
     lb t1, 0(t0)
-    bne t1, zero, 1b
-    sb t1, 0(t0)
-    lw a0, 0x04(t0)
-    lw a1, 0x08(t0)
-    lw a2, 0x0c(t0)
+    bnez t1, 1b
+    lw t1, 0x04(t0)
+    sw t1, 0(a0)
+    lw t1, 0x08(t0)
+    sw t1, 0(a1)
+    lw t1, 0x0c(t0)
+    sw t1, 0(a2)
     j return_syscall
     
 Syscall_read:
     mv t3, a1
-    bne a0, zero, return_syscall
+    bnez a0, return_syscall
     li a0, 0
     li t0, serial_port
     li t2, 10
@@ -258,7 +249,7 @@ Syscall_get_systime:
     sb t1, 0(t0)
     1:
     lb t1, 0(t0)
-    bne t1, zero, 1b
+    bnez t1, 1b
     lw a0, 4(t0)
     j return_syscall
 

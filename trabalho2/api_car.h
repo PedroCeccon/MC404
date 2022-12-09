@@ -46,7 +46,7 @@ int set_handbreak(char valor);
   Retorna:
     Nada
 */
-void read_camera(char* img);
+void read_camera(unsigned char* img);
 
 
 /*
@@ -108,7 +108,7 @@ unsigned int get_time(void);
   Retorna:
     Nada
 */
-void filter_1d_image(char * img, char * filter);
+void filter_1d_image(unsigned char * img, char * filter);
 
 
 
@@ -119,7 +119,7 @@ void filter_1d_image(char * img, char * filter);
   Retorna:
     Nada
 */
-void display_image(char * img);
+void display_image(unsigned char * img);
 
 
 /*
