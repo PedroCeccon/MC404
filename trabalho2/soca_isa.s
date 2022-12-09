@@ -228,7 +228,7 @@ int_handler:
             blt t3, a2, read_loop
         
         fim_read:
-            mv a0, t3 #certo?
+            mv a0, t3 
             j pula
 
     write:
@@ -254,6 +254,111 @@ int_handler:
         j pula
 
     draw_line:
+        li t0, 0xFFFF0700 # ta certa a base?
+        addi t0, t0, 0x2
+        li t2, 100
+        sh t2, (t0) #Array size
+
+        addi t0, t0, 0x2
+        sw zero, (t0) # posicao inicial 
+
+        li t6, 100 # max
+        li t5, 0 # contador
+        loop100:
+            lb t3, 0(a0) 
+            li t2, 256
+            mul t3, t3, t2
+            add t3, t3, a6 # G
+            mul t3, t3, t2
+            add t3, t3, a6 # B
+            mul t3, t3, t2
+            addi t3, t3, 0xff # A
+
+            addi t0, t0, 0x4
+            sw t3, (t0) # cor
+            addi a0, a0, 1 # incrementando o buffer
+            addi t5, t5, 1 # incrementando o contador
+            blt t5, t6, loop100
+
+        li t0, 0xFFFF0700
+        li t2, 1
+        sb t2, (t0) #Storing “1” triggers
+        busywait_line:
+            lb t2, (t0) 
+            bne t2, zero, busywait_line
+
+        # de 100 a 200
+        li t0, 0xFFFF0700 
+        addi t0, t0, 0x2
+        li t2, 100
+        sh t2, (t0) #Array size
+
+        addi t0, t0, 0x2
+        li t2, 100
+        sw t2, (t0) # posicao inicial 
+
+        li t6, 100 # max
+        li t5, 0 # contador
+        loop200:
+            lb t3, 0(a0) 
+            li t2, 256
+            mul t3, t3, t2
+            add t3, t3, a6 # G
+            mul t3, t3, t2
+            add t3, t3, a6 # B
+            mul t3, t3, t2
+            addi t3, t3, 0xff # A
+
+            addi t0, t0, 0x4
+            sw t3, (t0) # cor
+            addi a0, a0, 1 # incrementando o buffer
+            addi t5, t5, 1 # incrementando o contador
+            blt t5, t6, loop200
+
+        li t0, 0xFFFF0700
+        li t2, 1
+        sb t2, (t0) #Storing “1” triggers
+        busywait_line1:
+            lb t2, (t0) 
+            bne t2, zero, busywait_line1
+
+        # de 200 a 256
+        li t0, 0xFFFF0700 
+        addi t0, t0, 0x2
+        li t2, 56
+        sh t2, (t0) #Array size
+
+        addi t0, t0, 0x2
+        li t2, 200
+        sw t2, (t0) # posicao inicial 
+
+        li t6, 56 # max
+        li t5, 0 # contador
+        loop256:
+            lb t3, 0(a0) 
+            li t2, 256
+            mul t3, t3, t2
+            add t3, t3, a6 # G
+            mul t3, t3, t2
+            add t3, t3, a6 # B
+            mul t3, t3, t2
+            addi t3, t3, 0xff # A
+
+            addi t0, t0, 0x4
+            sw t3, (t0) # cor
+            addi a0, a0, 1 # incrementando o buffer
+            addi t5, t5, 1 # incrementando o contador
+            blt t5, t6, loop256
+
+        li t0, 0xFFFF0700
+        li t2, 1
+        sb t2, (t0) #Storing “1” triggers
+        busywait_line2:
+            lb t2, (t0) 
+            bne t2, zero, busywait_line2
+
+        j pula
+
 
     get_systime:
         li t0, 0xFFFF0100

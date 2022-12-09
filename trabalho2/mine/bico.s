@@ -269,14 +269,15 @@ filter_1d_image:
     li t0, 0
     li t1, 256
 
+    mv t3, sp
     1:
-    lbu t2, 0(sp)
+    lbu t2, 0(t3)
     sb t2, 0(a0)
-    addi sp, sp, 1
+    addi t3, t3, 1
     addi a0, a0, 1
     addi t0, t0, 1
     blt t0, t1, 1b
-
+    addi sp, sp, 256
     ret
 
 .globl display_image

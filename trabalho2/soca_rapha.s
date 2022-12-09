@@ -19,13 +19,11 @@ isr_stack_end:
 int_handler:
   # saving context #
   csrrw sp, mscratch, sp # exchanging sp and mscratch
-  addi sp, sp, -192 # allocating space on teh isr stack
-  sw a0, 0(sp)
-  sw a1, 4(sp)
-  sw t0, 8(sp)
-  sw t1, 12(sp)
-  sw t2, 16(sp)
-  sw ra, 20(sp)
+  addi sp, sp, -128 # allocating space on teh isr stack
+  sw t0, 0(sp)
+  sw t1, 4(sp)
+  sw t2, 8(sp)
+  sw ra, 12(sp)
 
   # treating interuption #
   li t0, 10
@@ -46,20 +44,32 @@ int_handler:
   li t0, 16
   beq a7, t0, Syscall_get_rotation
 
+  li t0, 17
+  beq a7, t0, Syscall_read
+
+  li t0, 18
+  beq a7, t0, Syscall_write
+
+  li t0, 19
+  beq a7, t0, Syscall_draw_line
+
+  li t0, 20
+  beq a7, t0, Syscall_get_systime
+
   return:
   # restoring context #
-  lw ra, 20(sp)
-  lw t2, 16(sp)
-  lw t1, 12(sp)
-  lw t0, 8(sp)
-  lw a1, 4(sp)
-  lw a0, 0(sp)
-  addi sp, sp, 192
-  csrrw sp, mscratch, sp
-
   csrr t0, mepc  # loads return address
   addi t0, t0, 4 # adds 4 to return address (to get next instruction)
   csrw mepc, t0  # stores return address back to mepc
+  
+  lw ra, 12(sp)
+  lw t2, 8(sp)
+  lw t1, 4(sp)
+  lw t0, 0(sp)
+  addi sp, sp, 128
+  csrrw sp, mscratch, sp
+
+  
   mret   
 
 Syscall_set_motor: # code 10
@@ -80,7 +90,6 @@ Syscall_set_motor: # code 10
   j error_set_motor
 
   correct_engine:
-  sb a0, 0x21(t0)
 
   # setting turn direction
   li t1, -127
@@ -88,6 +97,7 @@ Syscall_set_motor: # code 10
   li t1, 127
   blt t1, a1, error_set_motor
 
+  sb a0, 0x21(t0)
   sb a1, 0x20(t0)
 
   # returning 0
@@ -102,11 +112,22 @@ Syscall_set_motor: # code 10
 Syscall_set_handbreak: # code 11
   # a0: value to be set on handbreak
 
+  li t1, 0
+  beq a0, t1, correct_handbreak
+  li t1, 1
+  beq a0, t1, correct_handbreak
+
+  j error_set_handbreak
+
+  correct_handbreak:
   li t0, car_base
   addi t1, t0, 0x22
   sb a0, (t1)
+  j return
 
-  ret
+  error_set_handbreak:
+  li a0, -1
+  j return
 
 Sycall_read_sensors: # code 12
   # a0: address to a 256 element vector that stores the values read from the luminosity sensor
@@ -119,12 +140,27 @@ Sycall_read_sensors: # code 12
   sb a1, 0x01(t0)
 
   wait_sensors:
-  lb a1, (t1)
+  lb a1, 0x01(t0)
   bne zero, a1, wait_sensors
 
   # storing the image
-  sb a0, 0x24(t0)
-  # TERMINARRRRRR AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  li a1, 256
+  li t1, 0 # loop aux
+
+  loop_read_sensors:
+    # getting next byte
+    addi t2, t0, 0x24
+    add t2, t2, t1
+    lb t3, (t2)
+
+    # storing in vector
+    add t2, a0, t1
+    sb t3, (t2)
+
+    # updating loop
+    addi t1, t1, 1 # aux = aux + 1
+    blt t1, a1, loop_read_sensors
+
   j return
 
 Syscall_read_sensor_distance: # code 13
@@ -136,7 +172,7 @@ Syscall_read_sensor_distance: # code 13
   sb a1, 0x02(t0)
 
   wait_sensor:
-  lb a1, (t1)
+  lb a1, 0x02(t0)
   bne zero, a1, wait_sensor
 
   # reading distance
@@ -153,19 +189,22 @@ Syscall_get_position: # code 15
   li t0, car_base
 
   # activating GPS
-  li a1, 1
-  sb a1, (t0)
+  li t1, 1
+  sb t1, (t0)
 
   wait_gps_position:
-  lb a1, (t0)
-  bne zero, a1, wait_gps_position
+  lb t1, (t0)
+  bne zero, t1, wait_gps_position
 
   # getting positions
-  lw a0, 0x10(t0) # storing x position
+  lw t1, 0x10(t0) # loading x position
+  sw t1, (a0) # storing x position
 
-  lw a1, 0x14(t0) # storing y position
+  lw t1, 0x14(t0) # loading y position
+  sw t1, (a1) # storing y position
 
-  lw a2, 0x18(t0) # storing z position
+  lw t1, 0x18(t0) # loading z position
+  sw t1, (a2) # storing z position
 
   j return
 
@@ -178,19 +217,22 @@ Syscall_get_rotation: # code 16
   li t0, car_base
 
   # activating GPS
-  li a1, 1
-  sb a1, (t0)
+  li t1, 1
+  sb t1, (t0)
 
   wait_gps_angle:
-  lb a1, (t0)
-  bne zero, a1, wait_gps_angle
+  lb t1, (t0)
+  bne zero, t1, wait_gps_angle
 
   # getting angles
-  lw a0, 0x04(t0) # storing x angle
+  lw t1, 0x04(t0) # loading x angle
+  sw t1, (a0) # storing x angle
 
-  lw a1, 0x08(t0) # storing y angle
+  lw t1, 0x08(t0) # loading y angle
+  sw t1, (a1) # storing y angle
 
-  lw a2, 0x0c(t0) # storing z angle
+  lw t1, 0x0c(t0) # loading z angle
+  sw t1, (a2) # storing z angle
 
   j return
 
@@ -205,17 +247,34 @@ Syscall_read: # code 17
   # reading input
   li a0, 0 # loop aux
 
-  loop:
+  filter:
     # starting port
-    li t2, 1
-    sb t2, 0x02(t0)
+    li t1, 1
+    sb t1, 0x02(t0)
 
-    wait_port_read:
-    lb t2, (t1)
-    bne zero, a1, wait_port_read
+    wait_port_read1:
+    lb t1, 0x02(t0)
+    bne zero, t1, wait_port_read1
+
+    lb t1, 0x03(t0)
+    beqz t1, filter
+    sb t1, 0(a1)
+    loop:
+    addi a0, a0, 1
+    addi a1, a1, 1
+    bge a0, a2, return
+    li t1, 1
+    sb t1, 0x02(t0)
+    wait_port_read2:
+    lb t1, 0x02(t0)
+    bne zero, t1, wait_port_read2
+    lb t1, 0x03(t0)
+    beqz t1, return
+    sb t1, 0(a1)
+    j loop
 
     # reading one byte
-    lb t2, 0x03(t0)
+    lb t1, 0x03(t0)
     
     # storing byte on buffer
     add t1, t0, a0
@@ -227,16 +286,97 @@ Syscall_read: # code 17
 
   # return
   add a1, zero, a2
-  ret
+  j return
 
-.globl logica_controle
-logica_controle:
-  li a0, 1
-  li a1, -15
-  li a7, 10
-  ecall
+Syscall_write: # code 18
+  # a0: file descriptor
+  # a1: buffer
+  # a2: size
 
-  ret
+  # getting the port's base address
+  li t0, port_base
+
+  # writing output
+  li a0, 0 # loop aux
+
+  loop_write:
+    # loading byte from buffer
+    add t1, a1, a0
+    lb t2, (t1)
+
+    # storing byte to port
+    sb t2, 0x01(t0)
+
+    # starting port
+    li t1, 1
+    sb t1, (t0)
+
+    wait_port_write:
+    lb t1, (t0)
+    bne zero, t1, wait_port_write
+
+    # updating loop
+    addi a0, a0, 1 # aux = aux + 1
+    blt a0, a2, loop_write
+
+  # return
+  j return
+
+Syscall_draw_line: # code 19
+  # a0: memmory address to the array that represents the line
+
+  # getting the canva's base address
+  li t0, canvas_base
+
+  # setting array size
+  li t1, 256
+  sh t1, 0x02(t0)
+
+  # setting initial position
+  li t1, 0
+  sw t1, 0x04(t0)
+
+  # setting array address
+  li t1, 0 # loop aux
+  li t2, 256
+
+  # drawing on canvas
+  loop_draw_line:
+    add t3, a0, t1
+    lw t4, (t3)
+
+    addi t3, t0, 0x08
+    add t3, t3, t1
+    sw t4, (t3)
+
+    # updating loop
+    addi t1, t1, 1 # aux = aux + 1
+    blt t1, t2, loop
+
+  li t1, 1
+  sb t1, (t0)
+
+  wait_canvas:
+  lb t1, (t0)
+  bne zero, t1, wait_canvas
+
+  j return
+
+Syscall_get_systime: # code 20
+  # getting the canva's base address
+  li t0, gpt_base
+
+  # starting gpt
+  li t1, 1
+  sb t1, (t0)
+
+  wait_gpt:
+  lb t1, (t0)
+  bne zero, t1, wait_gpt
+
+  # getting system time and returning
+  lw a0, 0x04(t0)
+  j return
 
 .globl _start
 _start:

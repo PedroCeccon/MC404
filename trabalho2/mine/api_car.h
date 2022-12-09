@@ -108,6 +108,7 @@ unsigned int get_time(void);
   Retorna:
     Nada
 */
+
 void filter_1d_image(unsigned char * img, char * filter);
 
 

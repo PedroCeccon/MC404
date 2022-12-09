@@ -18,6 +18,14 @@ stack_end:
 
 int_handler:
 csrrw sp, mscratch, sp
+addi sp, sp, -32
+sw ra, 0(sp)
+sw t0, 4(sp)
+sw t1, 8(sp)
+sw t2, 12(sp)
+sw t3, 16(sp)
+sw t4, 20(sp)
+
 .set set_motor, 10
 .set set_handbreak, 11
 .set read_sensors, 12
@@ -28,14 +36,6 @@ csrrw sp, mscratch, sp
 .set write, 18
 .set draw_line, 19
 .set get_systime, 20
- addi sp, sp, -32  
-    sw t0, 0(sp) 
-    sw t1, 4(sp)
-    sw t2, 8(sp)
-    sw t3, 12(sp)
-    sw t4, 16(sp)
-    sw ra, 20(sp)
-
 
 li t0, set_motor
 beq a7, t0, syscall_set_motor
@@ -207,7 +207,7 @@ syscall_read:
 syscall_write:
     li t1, port
     li t3, 1
-    bne a0, t3, conclusion
+    bne a0, t3, conclusion 
     li a0, 0
 
     writing:
@@ -226,6 +226,7 @@ syscall_write:
 
 syscall_draw_line:
 
+
 syscall_get_systime:
     li t1, gpt
     li t2, 1
@@ -239,18 +240,20 @@ syscall_get_systime:
     j conclusion
 
 conclusion:
+
+
 csrr t0, mepc  # carrega endereço de retorno (endereço da instrução que invocou a syscall)
 addi t0, t0, 4 # soma 4 no endereço de retorno (para retornar após a ecall) 
 csrw mepc, t0
 
 //recupera memoria e valores
-    lw ra, 20(sp)
-    lw t4, 16(sp)
-    lw t3, 12(sp)
-    lw t2, 8(sp)
-    lw t1, 4(sp)
-    lw t0, 0(sp)
-    addi sp, sp, 32
+lw t4, 20(sp)
+lw t3, 16(sp)
+lw t2, 12(sp)
+lw t1, 8(sp)
+lw t0, 4(sp)
+lw ra, 0(sp)
+addi sp, sp, 32
 csrrw sp, mscratch, sp
 mret
 

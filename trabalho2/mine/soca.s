@@ -169,77 +169,29 @@ Syscall_write:
 
 Syscall_draw_line:
     li t0, canvas
-    li t1, 400
+    li t6, 0
+    li t5, 255
+    2:
+    li t1, 1
     sh t1, 2(t0)
-    sw zero, 4(t0)
-    addi t1, t0, 8
-    addi t2, t1, 400
-    1:
-    lbu t2, 0(a0)
+    sw t6, 4(t0)
+    lbu t1, 0(a0)
     addi a0, a0, 1
-    li t3, 255
-    slli t3, t3, 8
-    add t3, t3, t2
-    slli t3, t3, 8
-    add t3, t3, t2
-    slli t3, t3, 8
-    add t3, t3, t2
-    sw t3, 0(t1)
-    addi t1, t1, 4
-    blt t1, t2, 1b
+    li t2, 0xff
+    slli t2, t2, 8
+    add t2, t2, t1
+    slli t2, t2, 8
+    add t2, t2, t1
+    slli t2, t2, 8
+    add t2, t2, t1
+    sw t2, 8(t0)
     li t1, 1
     sb t1, 0(t0)
-    2:
-    lb t1, 0(t0)
-    bnez t1, 2b
-    li t1, 400
-    sh t1, 2(t0)
-    li t1, 100
-    sw t1, 4(t0)
-    addi t1, t0, 8
-    addi t2, t1, 400
     1:
-    lbu t2, 0(a0)
-    addi a0, a0, 1
-    li t3, 255
-    slli t3, t3, 8
-    add t3, t3, t2
-    slli t3, t3, 8
-    add t3, t3, t2
-    slli t3, t3, 8
-    add t3, t3, t2
-    sw t3, 0(t1)
-    addi t1, t1, 4
-    blt t1, t2, 1b
-    li t1, 1
-    sb t1, 0(t0)
-    2:
     lb t1, 0(t0)
-    bnez t1, 2b
-    li t1, 224
-    sh t1, 2(t0)
-    li t1, 200
-    sw t1, 4(t0)
-    addi t1, t0, 8
-    addi t2, t1, 224
-    1:
-    lbu t2, 0(a0)
-    addi a0, a0, 1
-    li t3, 255
-    slli t3, t3, 8
-    add t3, t3, t2
-    slli t3, t3, 8
-    add t3, t3, t2
-    slli t3, t3, 8
-    add t3, t3, t2
-    sw t3, 0(t1)
-    addi t1, t1, 4
-    blt t1, t2, 1b
-    li t1, 1
-    sb t1, 0(t0)
-    2:
-    lb t1, 0(t0)
-    bnez t1, 2b
+    bnez t1, 1b
+    addi t6, t6, 1
+    blt t6, t5, 2b
     j return_syscall
 
 
@@ -261,7 +213,9 @@ int_handler:
     sw t1, 4(sp)
     sw t2, 8(sp)
     sw t3, 12(sp)
-    sw ra, 16(sp)
+    sw t5, 16(sp)
+    sw t6, 20(sp)
+    sw ra, 24(sp)
   
   # <= Implemente o tratamento da sua syscall aqui
     li t0, set_engine_and_steering_id
@@ -290,7 +244,9 @@ int_handler:
     addi t0, t0, 4 
     csrw mepc, t0  
 
-    lw ra, 16(sp)
+    lw ra, 24(sp)
+    lw t6, 20(sp)
+    lw t5, 16(sp)
     lw t3, 12(sp)
     lw t2, 8(sp)
     lw t1, 4(sp)
