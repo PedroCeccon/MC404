@@ -225,7 +225,34 @@ syscall_write:
     j writing
 
 syscall_draw_line:
+    li t2, 0
+    li t3, 256
+    li t1, canvas
 
+    draw_line1:
+    lbu t4, 0(a0)
+    li t5, 255
+    slli t5, t5, 8
+    add t5, t5, t4
+    slli t5, t5, 8
+    add t5, t5, t4
+    slli t5, t5, 8
+    add t5, t5, t4
+    
+    li t4, 1
+    sh t4, 2(t1)
+    sw t2, 4(t1)
+    sw t5, 8(t1)
+    li t4, 1
+    sb t4, 0(t1)
+
+    waiting8:
+    lb t4, 0(t1)
+    bne t4, zero, waiting8
+    addi t2, t2, 1
+    addi a0, a0, 1
+    blt t2, t3, draw_line1
+    j conclusion
 
 syscall_get_systime:
     li t1, gpt

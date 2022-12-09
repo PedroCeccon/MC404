@@ -45,7 +45,7 @@ void run_operation(int op){
     break;
 
   case 9:
-    for (i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++){
       filter[i] = atoi(gets(buffer));
     }
     filter_1d_image(img, filter);

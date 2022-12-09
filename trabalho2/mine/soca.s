@@ -121,7 +121,6 @@ Syscall_read:
     bnez a0, return_syscall
     li a0, 0
     li t0, serial_port
-    li t2, 10
     1:
     li t1, 1
     sb t1, 2(t0)

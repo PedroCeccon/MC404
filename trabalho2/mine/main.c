@@ -14,7 +14,6 @@ void my_read_sensors(unsigned char *sensor_values)
     char kernel[] = {-2, 5, -2};
     read_camera(light_sensor_buffer);
     filter_1d_image(light_sensor_buffer, kernel);
-
     // display_image(light_sensor_buffer); // Apenas para debug, pode gerar um atraso considerável
 }
 
@@ -22,7 +21,7 @@ void my_read_sensors(unsigned char *sensor_values)
 tiver valor acima de THRESHOLD tanto a esquerda quanto a direita, então retorna 
 a média entre eles.
 Depende de que o meio do sensor já esteja na faixa */
-const int THRESHOLD = 200;
+const int THRESHOLD = 150;
 int dist_meio()
 {
     my_read_sensors(light_sensor_buffer);
