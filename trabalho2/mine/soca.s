@@ -120,6 +120,7 @@ Syscall_read:
     mv t3, a1
     bnez a0, return_syscall
     li a0, 0
+    blez a2, return_syscall
     li t0, serial_port
     1:
     li t1, 1
