@@ -1,5 +1,3 @@
-# cuidado com nomes iguais!!!
-
 .globl set_motor
 set_motor:
     li a7, 10
@@ -48,6 +46,76 @@ get_rotation:
 
 .globl filter_1d_image
 filter_1d_image:
+    addi sp, sp, -256
+    mv t0, sp # sp
+
+    lb a4, 0(a1) # carrega o primeiro elemento do filtro
+    lb a5, 1(a1) # carrega o segundo elemento do filtro
+    lb a6, 2(a1) # carrega o terceiro elemento do filtro
+
+    li t4, 0 # auxiliar
+    addi a0, a0, 1
+    sb t4, 0(t0)
+    addi t0, t0, 1
+
+    li t1, 0 # contador 
+    li t2, 254 # aux 
+    filter_loop:
+        li t4, 0 # auxiliar
+        li t5, 0 # auxiliar
+
+        mv a7, a0
+        addi a7, a7, -1
+        lbu t3, 0(a7)
+        mul t5, t3, a4
+        add t4, t4, t5
+
+        lbu t3, 0(a0)
+        mul t5, t3, a5
+        add t4, t4, t5
+
+        lbu t3, 1(a0)
+        mul t5, t3, a6
+        add t4, t4, t5
+
+        addi a0, a0, 1
+
+        # verificar se t4 > 0 e t4 < 255
+        li t6, 0
+        blt t4, t6, abaixo
+        li t6, 255
+        bge t4, t6, acima
+        j intervalo_certo
+
+        abaixo:
+            li t4, 0
+            j intervalo_certo
+
+        acima:
+            li t4, 255
+
+        intervalo_certo:
+            sb t4, 0(t0)
+            addi t0, t0, 1
+
+            addi t1, t1, 1
+            bne t1, t2, filter_loop
+
+    li t4, 0 # auxiliar
+    sb t4, 0(t0)
+
+    li t1, 0 # contador
+    li t2, 256 
+    recupera_sp:
+        lbu t3, 0(t0)
+        sb t3, 0(a0)
+        addi t0, t0, -1
+        addi a0, a0, -1
+        addi t1, t1, 1
+        bne t1, t2, recupera_sp
+
+    addi sp, sp, 256
+    ret
 
 
 .globl display_image
@@ -90,7 +158,7 @@ gets: # a0 eh endereco do buffer que vai guardar a string lida
         mv a1, t0 # buffer 
         li a0, 0 # file descriptor = 0 (stdin)
         li a2, 1 # size (tamanho maximo possivel)
-        li a7, 17 # syscall read (17)
+        li a7, 17 # syscall read (63)
         ecall
         beq a0, t1, end_gets # se retornou 0, acabou a leitura
         lbu t3, 0(t0) # le o caractere
@@ -107,17 +175,37 @@ atoi: # a0 eh endereco da string terminada em \0
     li t1, 10
     li t3, 0
     li t4, 0
+    
+    checa_sinal:
+        li t5, '-'
+        lbu t0, 0(a0) # pega o proximo digito
+        beq t0, t5, neg_atoi # se for -, multiplica por -1
     lerNumero:
         lbu t0, 0(a0) # pega o proximo digito
-        beq t0, t3, fim_atoi # se for \0, acaba
+        beq t0, t3, fim_atoi # se for \0, acaba 
+
+        li t5, 0x20
+        bne t0, t5, continua_lerNumero
+        addi a0, a0, 1 # incrementa o endereço do buffer
+        j lerNumero
+
+    continua_lerNumero:
         addi t0, t0, -48 # converte para inteiro
         mul t4, t4, t1 
         add t4, t4, t0 
         addi a0, a0, 1 # incrementa o endereço do buffer
         j lerNumero
+    neg_atoi:
+        addi a0, a0, 1 # incrementa o endereço do buffer
+        li t6, -1
+        j lerNumero
     fim_atoi:
-        mv a0, t4
-        ret
+        li t5, -1
+        bne t5, t6, fim_atoi2
+        mul t4, t4, t6
+        fim_atoi2:
+            mv a0, t4
+            ret
 
 .globl itoa
 itoa: # apenas base 10 e 16, desconsidera maiusculas e minusculas
@@ -196,20 +284,6 @@ approx_sqrt: #raiz quadrada de um número usando Babylonian method, a0 eh o nume
 
 
 .globl get_time
-# get_time:
-#     addi sp, sp, -16
-#     mv a0, sp
-#     mv a1, zero
-#     li a7, 169 
-#     ecall
-#     lw t0, 0(sp)
-#     lw t1, 8(sp)
-#     addi sp, sp, 16
-#     li t2, 1000
-#     mul t0, t0, t2
-#     div t1, t1, t2
-#     add a0, t0, t1
-#     ret
 get_time:
     li a7, 20
     ecall
