@@ -59,6 +59,9 @@ int_handler:
         li t0, base_timer
         li t1, 1
         sb t1, 0(t0)
+        busy_waiting_time:
+        lb t1, 0(t0)
+        bne t1, zero, busy_waiting_time
         lw a0, 0x04(t0)
         j continua
 
