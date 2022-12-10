@@ -64,9 +64,7 @@ filter_1d_image:
         li t4, 0 # auxiliar
         li t5, 0 # auxiliar
 
-        mv a7, a0
-        addi a7, a7, -1
-        lbu t3, 0(a7)
+        lbu t3, -1(a0)
         mul t5, t3, a4
         add t4, t4, t5
 
@@ -113,6 +111,7 @@ filter_1d_image:
         addi a0, a0, -1
         addi t1, t1, 1
         bne t1, t2, recupera_sp
+    addi a0, a0, 1
 
     addi sp, sp, 256
     ret
