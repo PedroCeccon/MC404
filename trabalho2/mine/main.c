@@ -21,7 +21,7 @@ void my_read_sensors(unsigned char *sensor_values)
 tiver valor acima de THRESHOLD tanto a esquerda quanto a direita, então retorna 
 a média entre eles.
 Depende de que o meio do sensor já esteja na faixa */
-const int THRESHOLD = 150;
+const int THRESHOLD = 165;
 int dist_meio()
 {
     my_read_sensors(light_sensor_buffer);

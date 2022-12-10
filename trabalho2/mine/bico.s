@@ -254,6 +254,7 @@ filter_1d_image:
     bltz t3, 2f
     li t1, 255
     bgt t3, t1, 3f
+    j 4f
     2:
     li t3, 0
     j 4f
